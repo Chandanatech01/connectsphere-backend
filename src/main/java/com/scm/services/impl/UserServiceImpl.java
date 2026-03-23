@@ -32,10 +32,9 @@ public class UserServiceImpl implements UserService {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-
     @Autowired
     private  Helper helper;
-
+    
     @Override
     public User saveUser(User user) {
         // user id : have to generate
@@ -53,7 +52,7 @@ public class UserServiceImpl implements UserService {
         String emailToken = UUID.randomUUID().toString();
         user.setEmailToken(emailToken);
         User savedUser = userRepo.save(user);
-        String emailLink = "http://localhost:8081/api/auth/verify-email?token=" + emailToken;
+        String emailLink = "https://connectsphere-backend-vopj.onrender.com/api/auth/verify-email?token=" + emailToken;
         emailService.sendEmail(savedUser.getEmail(), "Verify Account : Smart Contact Manager", emailLink);
         return savedUser;
 
