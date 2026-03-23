@@ -26,10 +26,16 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired private SecurityCustomUserDetailService userDetailService;
-    @Autowired private OAuthAuthenticationSuccessHandler oauthSuccessHandler;
-    @Autowired private JwtFilter jwtFilter;
+    @Autowired
+    private SecurityCustomUserDetailService userDetailService;
 
+    @Autowired
+    private OAuthAuthenticationSuccessHandler oauthSuccessHandler;
+
+    @Autowired
+    private JwtFilter jwtFilter;
+
+    // ✅ Authentication Provider
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -38,48 +44,75 @@ public class SecurityConfig {
         return provider;
     }
 
+    // ✅ Authentication Manager
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    // ✅ Main Security Config
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable);
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-        http.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.authorizeHttpRequests(auth -> {
-            auth.requestMatchers(
-                "/api/auth/**",
-                "/api/users/forgot-password",
-                "/api/users/reset-password",
-                "/oauth2/**",
-                "/actuator/**"
-            ).permitAll();
-            auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
-            auth.requestMatchers("/api/**").authenticated();
-            auth.anyRequest().permitAll();
-        });
+        http
+            .csrf(AbstractHttpConfigurer::disable)
 
-        http.oauth2Login(oauth -> oauth.successHandler(oauthSuccessHandler));
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            // 🔥 IMPORTANT FIX
+            .authenticationProvider(authenticationProvider())
+
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/api/auth/**",
+                    "/api/users/forgot-password",
+                    "/api/users/reset-password",
+                    "/oauth2/**",
+                    "/actuator/**"
+                ).permitAll()
+
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                .requestMatchers("/api/**").authenticated()
+
+                .anyRequest().permitAll()
+            )
+
+            .oauth2Login(oauth ->
+                oauth.successHandler(oauthSuccessHandler)
+            );
+
+        // ✅ JWT Filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // ✅ CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://connectsphere-frontend-txlb.onrender.com"));
+
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "https://connectsphere-frontend-txlb.onrender.com"
+        ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 
+    // ✅ PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
