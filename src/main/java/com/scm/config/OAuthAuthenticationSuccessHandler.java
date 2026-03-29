@@ -115,7 +115,7 @@ public class OAuthAuthenticationSuccessHandler implements AuthenticationSuccessH
         String userId = savedUser.getUserId();
 
         // Redirect to React frontend — works both locally and after deployment!
-        String redirectUrl = frontendUrl + "/oauth-success"
+        String redirectUrl = frontendUrl + "/#/oauth-success"
                 + "?token=" + token
                 + "&userId=" + userId
                 + "&name=" + userName
