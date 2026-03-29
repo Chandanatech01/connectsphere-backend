@@ -98,9 +98,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "https://connectsphere-frontend-txlb.onrender.com"
-        ));
+        	    "http://localhost:5173",
+        	    "https://connectsphere-frontend-vext.onrender.com"
+        	));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
